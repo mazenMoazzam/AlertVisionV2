@@ -4,8 +4,8 @@
 
 ## Tech Stack
 
-Languages: Python, Go, Javascript
+**Languages**: Python, Go, Javascript
 
-Frameworks/Technologies: React.js, FastAPI, AWS S3, Docker Compose, OpenAI API
+**Frameworks/Technologies**: React.js, FastAPI, AWS S3, Docker Compose, OpenAI API
 
-Message Brokers: RabbitMQ
+**Message Brokers**: RabbitMQ

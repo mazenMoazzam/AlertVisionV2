@@ -1,0 +1,47 @@
+services:
+  api:
+    build: ./backend
+    container_name: alertvision_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - rabbitmq
+      - mongo
+    restart: always
+
+  worker:
+    build: ./backend
+    command: ["python", "worker.py"]
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - rabbitmq
+      - mongo
+    deploy:
+      replicas: 3
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: always
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+volumes:
+  mongo_data:

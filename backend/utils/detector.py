@@ -22,10 +22,10 @@ def get_youtube_stream_url(youtube_url: str) -> str:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(youtube_url, download=False)
             stream_url = info.get("url")
-            print(f"✅ YouTube stream resolved: {stream_url[:60]}...")
+            print(f"YouTube stream resolved: {stream_url[:60]}...")
             return stream_url
     except Exception as e:
-        print(f"❌ Failed to resolve YouTube URL: {e}")
+        print(f"Failed to resolve YouTube URL: {e}")
         return youtube_url
 
 
@@ -36,7 +36,7 @@ def detect_objects(video_path, max_duration=3, mode="object"):
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
-        print(f"❌ Could not open video stream: {video_path}")
+        print(f"Could not open video stream: {video_path}")
         return []
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

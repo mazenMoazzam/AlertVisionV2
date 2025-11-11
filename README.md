@@ -6,6 +6,6 @@
 
 Languages: Python, Go, Javascript
 
-Frameworks/Technologies: React.js, FastAPI, AWS S3, OpenAI API
+Frameworks/Technologies: React.js, FastAPI, AWS S3, Docker Compose, OpenAI API
 
 Message Brokers: RabbitMQ

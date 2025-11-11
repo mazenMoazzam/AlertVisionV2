@@ -1,31 +1,32 @@
+import pika
 import json
-from datetime import datetime
-from pymongo import MongoClient
-from utils.detector import detect_objects
-from dotenv import load_dotenv
 import os
-
+from dotenv import load_dotenv
+from pymongo import MongoClient
+from datetime import datetime
+from utils.detector import detect_objects
 load_dotenv()
 
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_QUEUE = os.getenv("RABBITMQ_QUEUE", "feeds_queue")
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB", "alertvision")
+
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 
 def process_feed(feed_url, mode="object"):
-    print(f"🎥 Starting detection for feed: {feed_url}")
+    print(f"Starting detection for feed: {feed_url}")
     try:
-        events = detect_objects(feed_url, max_duration=60, mode=mode)
-
+        events = detect_objects(feed_url, max_duration=15, mode=mode)  
         result = {
             "feed_url": feed_url,
             "timestamp": datetime.utcnow(),
             "events": events,
             "status": "completed" if events else "no_detections"
         }
-
         db["detections"].insert_one(result)
-        print(f"Stored {len(events)} events for feed {feed_url} in MongoDB.")
+        print(f"Stored {len(events)} events for {feed_url}")
     except Exception as e:
         print(f"Error processing {feed_url}: {e}")
         db["detections"].insert_one({
@@ -35,17 +36,29 @@ def process_feed(feed_url, mode="object"):
             "error": str(e)
         })
 
-def process_all_feeds(feeds_file="feeds.json"):
-    with open(feeds_file, "r") as f:
-        feeds_data = json.load(f)
+def callback(ch, method, properties, body):
+    data = json.loads(body)
+    feed_url = data.get("feed_url")
+    if not feed_url:
+        print("Received invalid message:", data)
+        return
 
-    feeds = feeds_data.get("feeds", [])
-    print(f"🚀 Starting worker for {len(feeds)} feeds...")
+    print(f"Received feed from queue: {feed_url}")
+    process_feed(feed_url)
 
-    for feed_url in feeds:
-        process_feed(feed_url)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+    print(f"Finished processing feed: {feed_url}\n")
 
-    print("All feeds processed. Check MongoDB for results.")
+def start_worker():
+    print("Worker started. Waiting for feeds...")
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+    channel = connection.channel()
+
+    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue=RABBITMQ_QUEUE, on_message_callback=callback)
+
+    channel.start_consuming()
 
 if __name__ == "__main__":
-    process_all_feeds()
+    start_worker()

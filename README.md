@@ -22,4 +22,6 @@
 
 User submits a POST request that contains a URL to be analyze -> URL is placed into a RabbitMQ messaging queue -> RMQ notifies workers -> worker picks up message and performs live feed analysis -> object/human detection frames are stored to S3 and emailed to user and detection data is stored in MongoDB for later retrieval.
 
-Frontend of the application allows for users to submit the URL and be able to view the status analyzed views (what URLs have been processed, which ones are in progress, and which ones are currently in the queue) and the live stream is streamed in the frontend for the user to be able to see.
+Frontend of the application allows for users to submit the URL and be able to view the status analyzed views (what URLs have been processed, which ones are in progress, and which ones are currently in the queue) and the live stream is streamed in the frontend for the user to be able to see. A Go-based service is also displaying data on the frontend to provide health statuses for each of components for this project (workers, RMQ, MongoDB).
+
+With the use of Docker Compose, the number of workers processing live video feeds can be scaled up or down before starting the application. Initially, before containerizing the backend, there was only one worker processing live-feeds, which caused analysis time to be slow for numerous feeds in the queue. However, through scaling the number of workers, different feeds are able to be processed through different amounts of workers, speeding up analysis time for numerous feeds.
